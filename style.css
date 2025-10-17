@@ -1,0 +1,110 @@
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: #fff;
+  background: radial-gradient(1200px 800px at 70% 20%, #2b2d77 0%, #121329 60%, #090a1a 100%);
+  overflow: hidden;
+}
+
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(5, 6, 16, 0.45);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  z-index: 10;
+}
+
+.brand { display: flex; gap: 10px; align-items: center; }
+.logo { font-size: 28px; }
+.titles h1 { font-size: 18px; margin: 0; letter-spacing: 0.3px; }
+.subtitle { margin: 0; opacity: 0.75; font-size: 12px; }
+
+.controls { display: flex; gap: 8px; }
+.btn {
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn.primary { background: linear-gradient(135deg, #ff9d2f, #ff6126); border-color: transparent; }
+.btn.big { font-size: 18px; padding: 12px 18px; }
+
+.stage-wrapper {
+  position: relative;
+  width: 100vw; height: 100vh;
+}
+
+#stage {
+  position: absolute;
+  inset: 0;
+}
+
+.hud {
+  position: fixed;
+  top: 56px; right: 12px;
+  display: grid;
+  gap: 8px;
+  z-index: 9;
+}
+.tile {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 8px 12px;
+  min-width: 120px;
+}
+.label { opacity: 0.8; font-size: 12px; }
+.value { font-weight: 800; font-size: 18px; }
+
+#cta {
+  position: absolute; inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  gap: 12px;
+}
+#cta.hidden { display: none; }
+#cta h2 { font-size: 28px; margin: 0; }
+.tips {
+  margin: 8px 0 0;
+  padding: 0 0 0 18px;
+  text-align: left;
+  max-width: 520px;
+  opacity: 0.9;
+}
+
+.footer {
+  position: fixed;
+  left: 0; right: 0; bottom: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; opacity: 0.7;
+}
+
+.diyaa {
+  position: absolute;
+  width: 36px; height: 36px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(255,170,48,0.55));
+}
+
+@media (max-width: 640px) {
+  .titles h1 { font-size: 16px; }
+  .subtitle { display: none; }
+  .tile { min-width: 100px; }
+}

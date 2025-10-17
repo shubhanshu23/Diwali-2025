@@ -1,0 +1,287 @@
+// Diwali Fireworks Game - Vanilla JS (GitHub Pages friendly)
+(() => {
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+  const btnStart = document.getElementById('btnStart');
+  const btnReset = document.getElementById('btnReset');
+  const btnShare = document.getElementById('btnShare');
+  const btnPlay = document.getElementById('btnPlay');
+  const cta = document.getElementById('cta');
+
+  const scoreEl = document.getElementById('score');
+  const timeEl = document.getElementById('time');
+  const bestEl = document.getElementById('best');
+
+  let W, H, running = false, raf;
+  let fireworks = [];
+  let sparks = [];
+  let diyas = [];
+  let score = 0;
+  let timeLeft = 30;
+  let lastLaunch = 0;
+  let comboCount = 0;
+  let comboWindow = 0;
+
+  const bestKey = 'diwali_best_score_v1';
+
+  function resize() {
+    W = canvas.clientWidth = window.innerWidth;
+    H = canvas.clientHeight = window.innerHeight;
+    canvas.width = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Utility
+  const rand = (min, max) => Math.random() * (max - min) + min;
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+  // Firework projectile
+  class Firework {
+    constructor(x, y, tx, ty, color) {
+      this.x = x; this.y = y; this.tx = tx; this.ty = ty;
+      this.color = color;
+      this.speed = rand(2.2, 3.2);
+      this.angle = Math.atan2(ty - y, tx - x);
+      this.vx = Math.cos(this.angle) * this.speed;
+      this.vy = Math.sin(this.angle) * this.speed;
+      this.life = 1;
+    }
+    update(dt) {
+      this.x += this.vx * dt * 60;
+      this.y += this.vy * dt * 60;
+      this.vy += 0.012 * dt * 60; // gravity
+      // trail
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y);
+      ctx.lineTo(this.x - this.vx * 2, this.y - this.vy * 2);
+      ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+
+      // explode?
+      if (Math.hypot(this.tx - this.x, this.ty - this.y) < 10 || this.y < H*0.15) {
+        explode(this.x, this.y, this.color);
+        this.life = 0;
+        addScore(5);
+        registerCombo();
+      }
+      return this.life > 0;
+    }
+  }
+
+  function explode(x, y, color) {
+    const count = Math.floor(rand(28, 52));
+    for (let i=0; i<count; i++) {
+      const angle = (Math.PI * 2) * (i / count) + rand(-0.15, 0.15);
+      const speed = rand(1.2, 3.6);
+      sparks.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        color,
+      });
+    }
+    // flash
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  function drawSpark(s, dt) {
+    s.x += s.vx * dt * 60;
+    s.y += s.vy * dt * 60;
+    s.vy += 0.02 * dt * 60;
+    s.life -= 0.012 * dt * 60;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = s.color;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 2.2, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    return s.life > 0;
+  }
+
+  // Diyas (bonus targets)
+  const diyaaEmoji = '🪔';
+  function spawnDiya() {
+    const x = rand(36, W - 36);
+    const y = rand(H*0.55, H*0.8);
+    diyas.push({ x, y, r: 18, life: 1, flicker: rand(0, Math.PI*2) });
+  }
+  function drawDiya(d, dt) {
+    d.flicker += dt * 6;
+    const glow = (Math.sin(d.flicker) * 0.5 + 0.5) * 0.35 + 0.65;
+    ctx.save();
+    ctx.font = '28px Poppins, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = `rgba(255,170,48,${glow})`;
+    ctx.shadowBlur = 18 * glow;
+    ctx.fillText(diyaaEmoji, d.x, d.y);
+    ctx.restore();
+    return d.life > 0;
+  }
+
+  function backgroundStars(dt) {
+    // subtle twinkles
+    const n = 40;
+    ctx.save();
+    for (let i=0;i<n;i++) {
+      const x = (i * 97) % W;
+      const y = (i * 61) % H;
+      const a = (Math.sin((performance.now()/1000 + i)*1.7) * 0.5 + 0.5) * 0.25;
+      ctx.fillStyle = `rgba(255,255,255,${a})`;
+      ctx.fillRect(x, y, 2, 2);
+    }
+    ctx.restore();
+  }
+
+  function addScore(n) {
+    score += n;
+    scoreEl.textContent = score;
+    const best = Number(localStorage.getItem(bestKey) || 0);
+    if (score > best) {
+      localStorage.setItem(bestKey, String(score));
+      bestEl.textContent = score;
+    }
+  }
+
+  function registerCombo() {
+    const now = performance.now();
+    if (now - comboWindow < 1000) {
+      comboCount++;
+      if (comboCount >= 3) {
+        addScore(5); // combo bonus
+        comboCount = 0;
+        comboWindow = 0;
+      }
+    } else {
+      comboCount = 1;
+      comboWindow = now;
+    }
+  }
+
+  function launch(x, y) {
+    const hue = Math.floor(rand(0, 360));
+    const color = `hsl(${hue} 100% 70%)`;
+    const startX = rand(W*0.2, W*0.8);
+    const startY = H + 20;
+    fireworks.push(new Firework(startX, startY, x, y, color));
+  }
+
+  // Input
+  function pointer(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+    // check diya hits first
+    for (let i = diyas.length - 1; i >= 0; i--) {
+      const d = diyas[i];
+      if (Math.hypot(d.x - x, d.y - y) <= 22) {
+        diyas.splice(i,1);
+        addScore(3);
+        // small celebratory pop
+        explode(x, y - 10, 'hsl(35 100% 65%)');
+        return;
+      }
+    }
+    launch(x, y);
+  }
+  canvas.addEventListener('pointerdown', pointer, { passive: true });
+  canvas.addEventListener('touchstart', pointer, { passive: true });
+
+  // Game loop
+  let last = performance.now();
+  function frame(now) {
+    const dt = clamp((now - last) / 1000, 0, 0.033);
+    last = now;
+
+    ctx.clearRect(0, 0, W, H);
+    backgroundStars(dt);
+
+    // occasional auto launch while running
+    if (running && now - lastLaunch > 550) {
+      lastLaunch = now;
+      launch(rand(W*0.15, W*0.85), rand(H*0.18, H*0.45));
+      if (Math.random() < 0.35 && diyas.length < 6) spawnDiya();
+    }
+
+    fireworks = fireworks.filter(f => f.update(dt));
+    sparks = sparks.filter(s => drawSpark(s, dt));
+    diyas = diyas.filter(d => drawDiya(d, dt));
+
+    raf = requestAnimationFrame(frame);
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    score = 0;
+    timeLeft = 30;
+    scoreEl.textContent = score;
+    timeEl.textContent = timeLeft;
+    cta.classList.add('hidden');
+    lastLaunch = performance.now();
+  }
+
+  function reset() {
+    running = false;
+    fireworks = [];
+    sparks = [];
+    diyas = [];
+    score = 0;
+    timeLeft = 30;
+    scoreEl.textContent = '0';
+    timeEl.textContent = '30';
+    cta.classList.remove('hidden');
+  }
+
+  // Timer
+  setInterval(() => {
+    if (!running) return;
+    timeLeft--;
+    timeEl.textContent = timeLeft;
+    if (timeLeft <= 0) {
+      running = false;
+      // celebratory finale
+      for (let i=0; i<8; i++) {
+        setTimeout(() => launch(rand(80, W-80), rand(H*0.2, H*0.45)), i*120);
+      }
+      setTimeout(() => {
+        cta.classList.remove('hidden');
+        cta.querySelector('h2').textContent = `Time's up! 🎉 Your score: ${score}`;
+      }, 1200);
+    }
+  }, 1000);
+
+  // Buttons
+  btnStart.addEventListener('click', start);
+  btnPlay.addEventListener('click', start);
+  btnReset.addEventListener('click', reset);
+
+  btnShare.addEventListener('click', async () => {
+    const url = window.location.href;
+    const text = `Happy Diwali! I just scored ${score} in Diwali Fireworks. Play here: ${url}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Diwali Fireworks', text, url }); } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+      btnShare.textContent = 'Copied!';
+      setTimeout(() => (btnShare.textContent = 'Share'), 1200);
+    }
+  });
+
+  // Init
+  bestEl.textContent = localStorage.getItem(bestKey) || '0';
+  frame(performance.now());
+})();

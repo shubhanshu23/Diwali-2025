@@ -6,7 +6,7 @@ html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: radial-gradient(1000px 800px at 70% 25%, #6b3a09 0%, #2c1603 55%, #0b0703 100%);
+  background: radial-gradient(1000px 800px at 70% 20%, #2b004d 0%, #0a0018 60%, #03000a 100%);
   color: #fff;
   font-family: 'Poppins', sans-serif;
 }

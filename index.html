@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diwali Fireworks 🎆</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="Light diyas, burst fireworks, and celebrate Diwali right in your browser!" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">🪔</span>
+        <div class="titles">
+          <h1>Diwali Fireworks</h1>
+          <p class="subtitle">Light diyas. Tap to burst fireworks. Score high!</p>
+        </div>
+      </div>
+      <nav class="controls">
+        <button id="btnStart" class="btn primary">Start</button>
+        <button id="btnReset" class="btn">Reset</button>
+        <button id="btnShare" class="btn">Share</button>
+      </nav>
+    </header>
+
+    <main class="stage-wrapper">
+      <canvas id="stage" aria-label="Fireworks canvas" role="img"></canvas>
+      <div class="hud">
+        <div class="tile">
+          <span class="label">Score</span>
+          <span id="score" class="value">0</span>
+        </div>
+        <div class="tile">
+          <span class="label">Time</span>
+          <span id="time" class="value">30</span>
+        </div>
+        <div class="tile">
+          <span class="label">Best</span>
+          <span id="best" class="value">0</span>
+        </div>
+      </div>
+
+      <div id="cta" class="cta hidden">
+        <h2>Happy Diwali! 🎇</h2>
+        <p>Tap or click anywhere to launch fireworks. Make combos for bonus points!</p>
+        <ul class="tips">
+          <li>💥 Combo +5 if you burst 3+ fireworks in 1 second</li>
+          <li>🪔 Light the floating diyas (+3 each)</li>
+          <li>⭐ Try to beat your best score</li>
+        </ul>
+        <button id="btnPlay" class="btn primary big">Play Now</button>
+      </div>
+
+      <footer class="footer">
+        <p>Made with ❤️ for Diwali. Works offline on GitHub Pages.</p>
+      </footer>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

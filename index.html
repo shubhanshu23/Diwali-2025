@@ -170,34 +170,26 @@
     diyas.push({ x, y, type, r: 20, life: 1, flicker: rand(0, Math.PI * 2) });
   }
 
-  // 💣 and 🪔 drawing with ambient halo glow
   function drawDiya(d, dt) {
-    d.flicker += dt * 6;
-    const glow = (Math.sin(d.flicker) * 0.5 + 0.5) * 0.35 + 0.65;
+  d.flicker += dt * 6;
+  const glow = (Math.sin(d.flicker) * 0.5 + 0.5) * 0.35 + 0.65;
 
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+  ctx.save();
+  ctx.font = "30px Poppins, system-ui";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
 
-    // ✨ Ambient halo behind each item for better visibility
-    ctx.beginPath();
-    ctx.arc(d.x, d.y, 28, 0, Math.PI * 2);
-    ctx.fillStyle = d.type === "bomb"
-      ? "rgba(255, 120, 30, 0.25)"   // warm orange halo for bombs
-      : "rgba(255, 180, 80, 0.25)";  // golden halo for diyas
-    ctx.fill();
+  // Simple orange/golden shadow glow — clean and crisp
+  ctx.shadowColor = d.type === "bomb"
+    ? `rgba(255, 140, 40, ${glow})`
+    : `rgba(255, 200, 80, ${glow})`;
 
-    // Emoji glow and flicker
-    ctx.font = "30px Poppins, system-ui";
-    ctx.shadowColor = d.type === "bomb"
-      ? `rgba(255, 140, 40, ${glow})`
-      : `rgba(255, 200, 80, ${glow})`;
-    ctx.shadowBlur = 16 * glow;
-    ctx.fillText(d.type === "bomb" ? "💣" : "🪔", d.x, d.y);
+  ctx.shadowBlur = 16 * glow;
+  ctx.fillText(d.type === "bomb" ? "💣" : "🪔", d.x, d.y);
+  ctx.restore();
 
-    ctx.restore();
-    return d.life > 0;
-  }
+  return d.life > 0;
+}
 
   /* ---------------- Gameplay Logic ---------------- */
   function addScore(n) {
